@@ -1,5 +1,9 @@
 # Efficient SAM-based Models for Medical Image Segmentation (EdgeMedSAM)
 
+<p align="center">
+  <img src="edgemedsam.png" alt="EdgeMedSAM overview diagram" width="720">
+</p>
+
 ---
 
 ## 0) Overview
