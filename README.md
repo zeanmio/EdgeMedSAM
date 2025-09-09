@@ -1,25 +1,28 @@
-# SAM Medical Segmentation — Evaluation & Fine-Tuning (EdgeMedSAM)
+# Efficient SAM-based Models for Medical Image Segmentation (EdgeMedSAM)
 
 ---
 
 ## 0) Overview
-- **Goal**: Evaluate SAM-family models under a *deterministic, unified* **tight-box** protocol, and provide a lightweight medical adaptation — **EdgeMedSAM** (EdgeSAM + LoRA) — that preserves runtime efficiency.
-- **Metrics**: DSC (Dice), HD (Hausdorff), Inference Time (s/img), Throughput (imgs/s).
-- **Design**: Images as **8-bit RGB (uint8)**; masks as **single-channel binary** (0/255). Tight boxes are computed from GT mask bounding rectangles. LoRA params are **merged at export/inference**, so latency stays low.
+This repository evaluates SAM-family models on medical images under a deterministic, unified tight-box protocol, and introduces **EdgeMedSAM**, a lightweight fine-tuned variant designed to preserve runtime efficiency.
+
+**Evaluation** focuses on reproducibility and steady-state timing under a single, comparable protocol, producing accuracy and efficiency summaries across modalities.
+
+**Fine-tuning** applies parameter-efficient adaptation to EdgeSAM and exports a deployment-ready checkpoint without changing the inference path.
 
 ---
 
-## 1) Repository layout (trimmed)
+## 1) Repository layout
 ```
-SAM/
-├─ evaluation/                  # Model entry points & runners
-│  ├─ edgesam.py, efficientsam.py, sam.py, sam_for_med.py, ...
+EdgeMedSAM/
+├─ evaluation/                  
+│  ├─ edgesam.py, efficientsam.py, sam.py, sam_for_med.py, ...  # Model entry points
 │  ├─ run_and_merge_generic/balance/external.py  # Runner / sharding & merge
 │  └─ utils/                    # Shared helpers
+├─ training/
+│  └─ train_edgemedsam.py       # EdgeSAM + LoRA training > EdgeMedSAM
 ├─ output_lora/                 # LoRA checkpoints / merged exports
-├─ Model/                       # Base models
-├─ data/                        # Datasets + mapping.json
-├─ train_edgemedsam.py          # EdgeSAM + LoRA training > EdgeMedSAM
+├─ model/                       # Base models (not in this repo)
+├─ data/                        # Datasets + mapping.json (not in this repo)
 ├─ requirements-sam-env.txt     # General env (for SAM/SAM-for-Med/EfficientSAM/MobileSAM/SAM-Med-2D)
 ├─ requirements-sam-py311.txt   # Python 3.11 env (for EdgeSAM/MedSAM/Lite-MedSAM)
 └─ requirements-sam-fast.txt    # Lightweight/fast eval env (for FastSAM)
@@ -50,12 +53,12 @@ pip freeze > requirements-sam-fast.txt
 ---
 
 ## 3) Data format
-- **Images**: 8-bit RGB (uint8).  
-- **Masks**: single-channel binary (0/255).  
-- **Tight box**: derived from the GT mask bounding rectangle.  
-- **Shared protocol**: all models read the same `mapping.json` to ensure fairness and reproducibility.
+- **Images**: 8-bit RGB (uint8).
+- **Masks**: single-channel binary (0/255).
+- **Box prompt**: derived from the GT mask bounding rectangle.
+- **Shared protocol**: all models read the same mapping.json to ensure fairness and reproducibility.
 
-Both the random and balanced datasets were extracted from the original SAM-MED2D-20Mv1 dataset, uniformly using random number seed 1. The training dataset extracted all images and corresponding masks from the SA-MED2D-20Mv1 dataset except for the CT/MR modalities, while the CT/MR modalities were randomly sampled with random number seed 1. Based on these datasets, the evaluation and training results (DSC, HD) can be reproduced.
+Both the random and balanced datasets for evaluation were extracted from the original SA-Med2D-20Mv1 dataset, uniformly using random number seed 1. The training dataset extracted all images and corresponding masks from the SA-Med2D-20Mv1 dataset except for the CT/MR modalities, while the CT/MR modalities were randomly sampled with random number seed 1. Based on these datasets, the evaluation and training results can be reproduced.
 
 ---
 
@@ -139,7 +142,7 @@ The produced LoRA checkpoint lives under `output_lora/` and is merged at inferen
 
 ---
 
-## 6) Repro & FAQ (short)
+## 6) Repro & FAQ
 - Fix seeds for numpy/torch/CuDNN; keep the same `mapping.json` across models.  
 - Throughput is reported as **imgs/s**; inference time as **s/img** (exclude I/O).  
 - `torch.cuda.is_available()==False`: verify CUDA driver & wheel compatibility.  
@@ -147,4 +150,4 @@ The produced LoRA checkpoint lives under `output_lora/` and is merged at inferen
 
 
 ## 7) Acknowledgments
-This project evaluates/adapts several public models and implementations: **SAM**, **SAM-for-Med**, **MedSAM**, **SAM-Med2D**, **EdgeSAM**, **EfficientSAM**, **MobileSAM**, **FastSAM**, etc. Names belong to their respective authors/organisations.
+This project evaluates/adapts several public models and implementations: **SAM**, **SAM-for-Med**, **MedSAM**, **MedSAM_Lite**, **SAM-Med2D**, **EdgeSAM**, **EfficientSAM**, **MobileSAM**, **FastSAM**, etc. Names belong to their respective authors/organisations.
